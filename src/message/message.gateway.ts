@@ -7,7 +7,12 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { SocketKeys } from 'src/types/enums';
-import { FirstConnectionDto, GetMessageParamsProps } from './DTO/message.dto';
+import { defaultAdminResponse } from 'src/utils/consts';
+import {
+  CreateMessageParamsProps,
+  FirstConnectionDto,
+  GetMessageParamsProps,
+} from './DTO/message.dto';
 import { MessageService } from './message.service';
 import { messageList } from './temp';
 
@@ -34,21 +39,40 @@ export class MessageGateway
 
   @SubscribeMessage('first_connection')
   async handleMessage(client: Socket, params: FirstConnectionDto) {
-    const { headquarter_id, company_url } = params;
-    const res = await this.messageService.getHeadquarters(company_url);
+    const { headquarter_id, company_url, isAdmin } = params;
+
+    const result = await this.messageService.getHeadquarters(company_url);
+
+    let res = [];
+
+    if (isAdmin) res = result;
+    else res = result.filter((item) => item._id === headquarter_id);
+
     this.wss.to(client.id).emit('send_headquarters', res);
   }
 
   @SubscribeMessage('get_messages')
-  async handleSendMessages(client: Socket, params: GetMessageParamsProps) {
-    const { company, headquarterFrom, headquarterTo } = params;
+  handleSendMessages(client: Socket, params: GetMessageParamsProps) {
+    const { room, company_id } = params;
+
+    this.wss.socketsJoin(room);
 
     const messages = messageList.filter(
-      (item) =>
-        item.company === company &&
-        item.headquarterFrom === headquarterFrom &&
-        item.headquarterTo === headquarterTo,
+      (item) => item.company === company_id && item.room === room,
     );
-    this.wss.to(client.id).emit('message_list', messages);
+
+    this.wss.to(room).to(client.id).emit('message_list', messages);
+  }
+
+  @SubscribeMessage('create_message')
+  handleCreateMessage(client: Socket, params: CreateMessageParamsProps) {
+    const { content, datetime, company, room, sender } = params;
+    messageList.push({ content, datetime, company, room, sender });
+
+    const messages = messageList.filter(
+      (item) => item.company === company && item.room === room,
+    );
+
+    this.wss.to(room).to(client.id).emit('message_list', messages);
   }
 }

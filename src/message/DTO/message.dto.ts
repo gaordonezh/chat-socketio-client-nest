@@ -1,6 +1,7 @@
 export class FirstConnectionDto {
   headquarter_id: string;
   company_url: string;
+  isAdmin: boolean;
 }
 
 export class HeadquarterProps {
@@ -15,15 +16,16 @@ export class HeadquarterProps {
 }
 
 export class GetMessageParamsProps {
-  headquarterFrom: string;
-  headquarterTo: string;
-  company: string;
+  room: string;
+  company_id: string;
 }
 
 export class MessageDto {
-  message: string;
+  content: string;
   datetime: string;
-  headquarterFrom: string;
-  headquarterTo: string;
   company: string;
+  room: string;
+  sender: string;
 }
+
+export class CreateMessageParamsProps extends MessageDto {}
