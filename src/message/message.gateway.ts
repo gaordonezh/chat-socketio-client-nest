@@ -46,7 +46,7 @@ export class MessageGateway
     let res = [];
 
     if (isAdmin) res = result;
-    else res = result.filter((item) => item._id === headquarter_id);
+    else res = result; /* .filter((item) => item._id === headquarter_id); */
 
     this.wss.to(client.id).emit('send_headquarters', res);
   }
@@ -55,13 +55,12 @@ export class MessageGateway
   handleSendMessages(client: Socket, params: GetMessageParamsProps) {
     const { room, company_id } = params;
 
-    this.wss.socketsJoin(room);
-
     const messages = messageList.filter(
       (item) => item.company === company_id && item.room === room,
     );
 
-    this.wss.to(room).to(client.id).emit('message_list', messages);
+    this.wss.socketsJoin(room);
+    this.wss.to(client.id).emit('message_list', messages);
   }
 
   @SubscribeMessage('create_message')
@@ -73,6 +72,8 @@ export class MessageGateway
       (item) => item.company === company && item.room === room,
     );
 
-    this.wss.to(room).to(client.id).emit('message_list', messages);
+    console.log(room);
+
+    this.wss.to(room).emit('message_list', messages);
   }
 }
