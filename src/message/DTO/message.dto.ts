@@ -1,3 +1,5 @@
+import { IsNotEmpty, IsString, IsNumber, IsDateString } from 'class-validator';
+
 export class FirstConnectionDto {
   headquarter_id: string;
   company_url: string;
@@ -20,12 +22,38 @@ export class GetMessageParamsProps {
   company_id: string;
 }
 
-export class MessageDto {
-  content: string;
-  datetime: string;
+export class MessageBaseDto {
+  @IsNotEmpty()
+  @IsString()
   company: string;
-  room: string;
-  sender: string;
+
+  @IsNotEmpty()
+  @IsString()
+  headquarter: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  year: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  month: number;
 }
 
-export class CreateMessageParamsProps extends MessageDto {}
+export class MessageDto extends MessageBaseDto {
+  @IsNotEmpty()
+  @IsString()
+  content: string;
+
+  @IsNotEmpty()
+  @IsDateString()
+  datetime: Date;
+
+  @IsNotEmpty()
+  @IsString()
+  room: string;
+
+  @IsNotEmpty()
+  @IsString()
+  sender: string;
+}

@@ -1,9 +1,16 @@
+import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, Logger } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
-import { HeadquarterProps } from './DTO/message.dto';
+import {
+  HeadquarterProps,
+  MessageBaseDto,
+  MessageDto,
+} from './DTO/message.dto';
+import { Message, MessageDocument } from './message.schema';
+import { Model } from 'mongoose';
 
 interface ConnectedClient {
   [id: string]: Socket;
@@ -12,7 +19,11 @@ interface ConnectedClient {
 @Injectable()
 export class MessageService {
   private readonly logger = new Logger(MessageService.name);
-  constructor(private readonly httpService: HttpService) {}
+
+  constructor(
+    @InjectModel(Message.name) private messageModule: Model<MessageDocument>,
+    private readonly httpService: HttpService,
+  ) {}
 
   private connectedClient: ConnectedClient = {};
 
@@ -33,5 +44,13 @@ export class MessageService {
     );
 
     return data;
+  }
+
+  async getMessages(params: MessageBaseDto): Promise<Array<Message>> {
+    return await this.messageModule.find(params);
+  }
+
+  async createMessage(body: MessageDto) {
+    await this.messageModule.insertMany([body]);
   }
 }

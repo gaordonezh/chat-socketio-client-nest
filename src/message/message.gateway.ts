@@ -8,11 +8,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { SocketKeys } from 'src/types/enums';
 import { defaultAdminResponse } from 'src/utils/consts';
-import {
-  CreateMessageParamsProps,
-  FirstConnectionDto,
-  GetMessageParamsProps,
-} from './DTO/message.dto';
+import { FirstConnectionDto, GetMessageParamsProps } from './DTO/message.dto';
 import { MessageService } from './message.service';
 import { messageList } from './temp';
 
@@ -64,16 +60,11 @@ export class MessageGateway
   }
 
   @SubscribeMessage('create_message')
-  handleCreateMessage(client: Socket, params: CreateMessageParamsProps) {
+  handleCreateMessage(client: Socket, params) {
     const { content, datetime, company, room, sender } = params;
-    messageList.push({ content, datetime, company, room, sender });
 
-    const messages = messageList.filter(
-      (item) => item.company === company && item.room === room,
-    );
+    console.log(params);
 
-    console.log(room);
-
-    this.wss.to(room).emit('message_list', messages);
+    /* this.wss.to(room).emit('message_list', messages); */
   }
 }
