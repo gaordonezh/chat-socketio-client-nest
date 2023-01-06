@@ -7,10 +7,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { SocketKeys } from 'src/types/enums';
-import { defaultAdminResponse } from 'src/utils/consts';
-import { FirstConnectionDto, GetMessageParamsProps } from './DTO/message.dto';
+import { GetMessageParamsProps, MessageDto } from './DTO/message.dto';
 import { MessageService } from './message.service';
-import { messageList } from './temp';
 
 @WebSocketGateway({ cors: true })
 export class MessageGateway
@@ -21,50 +19,24 @@ export class MessageGateway
   constructor(private readonly messageService: MessageService) {}
 
   handleDisconnect(client: Socket) {
-    /* console.log('DISCONECTED'); */
+    /* ON DISCONECTED */
   }
 
   async handleConnection(client: Socket) {
-    /* this.messageService.registerClient(client); */
-
-    this.wss
-      .to(client.id)
-      .emit(SocketKeys.CONNECT_CLIENT, { connection: true });
-    /* this.wss.socketsJoin(''); */
+    /* ON CONNECT */
+    this.messageService.registerClient(client);
   }
 
-  @SubscribeMessage('first_connection')
-  async handleMessage(client: Socket, params: FirstConnectionDto) {
-    const { headquarter_id, company_url, isAdmin } = params;
-
-    const result = await this.messageService.getHeadquarters(company_url);
-
-    let res = [];
-
-    if (isAdmin) res = result;
-    else res = result; /* .filter((item) => item._id === headquarter_id); */
-
-    this.wss.to(client.id).emit('send_headquarters', res);
-  }
-
-  @SubscribeMessage('get_messages')
+  @SubscribeMessage(SocketKeys.JOIN)
   handleSendMessages(client: Socket, params: GetMessageParamsProps) {
-    const { room, company_id } = params;
-
-    const messages = messageList.filter(
-      (item) => item.company === company_id && item.room === room,
-    );
-
-    this.wss.socketsJoin(room);
-    this.wss.to(client.id).emit('message_list', messages);
+    client.leave(params.leave || client.id);
+    this.wss.socketsJoin(params.room);
   }
 
-  @SubscribeMessage('create_message')
-  handleCreateMessage(client: Socket, params) {
-    const { content, datetime, company, room, sender } = params;
-
-    console.log(params);
-
-    /* this.wss.to(room).emit('message_list', messages); */
+  @SubscribeMessage(SocketKeys.SEND)
+  async createMessage(client: Socket, params: MessageDto) {
+    this.wss.to(params.room).emit(SocketKeys.LAST_MESSAGE, params);
+    await this.messageService.createMessage(params);
+    return { data: true };
   }
 }

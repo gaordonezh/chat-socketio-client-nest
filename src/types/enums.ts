@@ -1,3 +1,12 @@
 export enum SocketKeys {
-  CONNECT_CLIENT = 'connect_client',
+  LAST_MESSAGE = 'LAST_MESSAGE',
+  JOIN = 'JOIN_HEADQUARTER',
+  SEND = 'SEND_MESSAGE',
+}
+
+export enum ContentTypeMessageEnum {
+  TEXT = 'text',
+  IMG = 'img',
+  PDF = 'pdf',
+  DOC = 'doc',
 }
