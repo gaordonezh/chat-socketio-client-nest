@@ -8,5 +8,6 @@ export enum ContentTypeMessageEnum {
   TEXT = 'text',
   IMG = 'img',
   PDF = 'pdf',
-  DOC = 'doc',
+  DOCX = 'docx',
+  XLSX = 'xlsx',
 }
